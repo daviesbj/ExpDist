@@ -26,10 +26,25 @@ To simulate a sample of 40 exponentials with $\lambda=0.2$, run the following:
 ```{r single_set_of_40_exponentials, cache = TRUE }
 rexp( sampleSize, lambda )
 mean( rexp(sampleSize, lambda ) )
-simResults <- sapply(c(1:nSamples), function(x){mean( rexp( sampleSize, lambda ) )})
-summary( simResults )
-sd( simResults )
+sampleSet <- matrix( rexp( nSamples * sampleSize, lambda ), ncol = sampleSize )
+sampleMeans <- apply( sampleSet, 1, mean )
+hist(sampleMeans)
+mean(sampleMeans)
+sd(sampleMeans)
 ```
 
-So now __simResults__ contains 1000 simulations of the mean of 40 exponentially-distributed
-values
+## Sample statistics of the sample means
+
+So now `sampleSet` contains 1000 simulations of the mean of 40 exponentially-distributed
+values, we've calculated their means and looked at the mean and standard deviation of
+said sample means, which are `r mean(sampleMeans)` and `r sd(sampleMeans)`
+respectively.
+
+For an exponential distribution with $\lambda = 0.2$, the mean $\mu$ and standard
+devation are $\sigma$ are both equal to $1 / \lambda$, i.e. `r 1/lambda`. The
+expectation of the sample mean is simply the distribution mean $\mu$, and the
+standard error of the mean is $\sigma / \sqrt n = 1/ \lambda / \sqrt n$ which
+is `r 1/lambda/sqrt(sampleSize)`, i.e pretty close to the values estimated
+from the sample.
+
+## Check for normality
