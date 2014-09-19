@@ -1,8 +1,8 @@
 ---
 title: "Sampling Properties of the Exponential Distribution -- Project Log"
 author: "Brian Davies"
-date: "02 September 2014"
-output: html_document
+date: "19 September 2014"
+output: pdf_document
 ---
 
 ## Project Aim
@@ -12,8 +12,6 @@ in the Coursera Inference Course project rubric.
 
 ## Simulation setup
 
-We'll do our basic setup here
-
 ```{r set_study_parameters, cache = TRUE}
 set.seed( 999*42 )
 lambda <- 0.2
@@ -21,30 +19,61 @@ sampleSize <- 40
 nSamples <- 1000
 ```
 
-To simulate a sample of 40 exponentials with $\lambda=0.2$, run the following:
+To simulate a sample of $n=$ `r sampleSize` exponentials with $\lambda=$ `r lambda`,
+run the following:
 
 ```{r single_set_of_40_exponentials, cache = TRUE }
 rexp( sampleSize, lambda )
 mean( rexp(sampleSize, lambda ) )
 sampleSet <- matrix( rexp( nSamples * sampleSize, lambda ), ncol = sampleSize )
 sampleMeans <- apply( sampleSet, 1, mean )
-hist(sampleMeans)
+sampleSDs <- apply( sampleSet, 1, sd )
 mean(sampleMeans)
 sd(sampleMeans)
 ```
 
 ## Sample statistics of the sample means
 
-So now `sampleSet` contains 1000 simulations of the mean of 40 exponentially-distributed
-values, we've calculated their means and looked at the mean and standard deviation of
+So now `sampleSet` contains `r nSamples` simulations of the mean of
+`r sampleSize` exponentially-distributed values, we've calculated their means
+and looked at the mean and standard deviation of
 said sample means, which are `r mean(sampleMeans)` and `r sd(sampleMeans)`
 respectively.
 
-For an exponential distribution with $\lambda = 0.2$, the mean $\mu$ and standard
-devation are $\sigma$ are both equal to $1 / \lambda$, i.e. `r 1/lambda`. The
+For an exponential distribution with $\lambda = $ `r lambda`, the mean $\mu$ and standard
+deviation are $\sigma$ are both equal to $1 / \lambda = $ `r 1/lambda`. The
 expectation of the sample mean is simply the distribution mean $\mu$, and the
 standard error of the mean is $\sigma / \sqrt n = 1/ \lambda / \sqrt n$ which
 is `r 1/lambda/sqrt(sampleSize)`, i.e pretty close to the values estimated
-from the sample.
+from the sample (I'm using the term _pretty close_ in its formal statistical
+sense here!)
 
 ## Check for normality
+
+Everyone seems to like the Shapiro-Wilk test http://en.wikipedia.org/wiki/Shapiro–Wilk_test
+
+```{r test_for_normality, cache = TRUE}
+shapiro.test(sampleMeans)
+```
+
+The p-value of `r shapiro.test(sampleMeans)$p.value` __exceeds__ 0.05 so we __fail
+to reject the null hypothesis__ that the `sampleMeans` vector is normally distributed.
+
+## Confidence interval coverage
+
+I interpret the question as follows: In what fraction of samples of size $n$
+does the _true_ mean $\mu$ lie inside the stated confidence interval as estimated
+from the sample? To do this we calculate the upper and lower CI limits for
+each sample of `r nSamples` values, and see if the true mean $1 / \lambda$ lies
+inside that interval.
+
+```{r coverage_test, cache = TRUE}
+
+ciLo <- sampleMeans - 1.96 * sampleSDs / sqrt(sampleSize)
+ciHi <- sampleMeans + 1.96 * sampleSDs / sqrt(sampleSize)
+insideCI <- ( ( 1 / lambda ) >= ciLo ) & ( ( 1 / lambda ) <= ciHi )
+mean(insideCI)
+```
+
+__So our confidence interval has `r mean(insideCI) * 100` percent coverage of
+the population mean__
